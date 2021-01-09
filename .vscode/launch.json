@@ -1,0 +1,10 @@
+{
+    "version": "0.0.0",
+    "configurations": [
+        {
+            "name": "expense_manager",
+            "request": "launch",
+            "type": "dart"
+        }
+    ]
+}
