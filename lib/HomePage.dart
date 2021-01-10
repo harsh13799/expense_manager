@@ -1,4 +1,3 @@
-import 'package:bottomnavigatorbar/widgets/mybottomnavbaritem.dart';
 import 'package:flutter/material.dart';
 import './Screens/add_product_page.dart';
 import './Screens/my_profile_page.dart';
@@ -7,8 +6,8 @@ import './Screens/generate_qr_page.dart';
 import './Screens/sale_it_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import './Screens/login_page.dart';
-
 import 'package:page_transition/page_transition.dart';
+import './widgets/mybottomnavbaritem.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -34,7 +33,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  int _currentIndex = 0;
+  int _currentIndex = 2;
 
   Widget getPage(index) {
     if (index == 0) {

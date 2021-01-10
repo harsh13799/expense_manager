@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../Constant/constants.dart';
@@ -33,6 +34,7 @@ class _AddProductPageState extends State<AddProductPage> {
   bool isCategorySelected = false;
   bool isSubCategorySelected = false;
   bool _isBoxes = false;
+  StreamSubscription<DocumentSnapshot> streamSub;
 
   var userMap = {};
 
@@ -41,7 +43,7 @@ class _AddProductPageState extends State<AddProductPage> {
     super.initState();
     var user = firebaseAuthInstance.currentUser;
     dr = firestoreInstance.collection("Users").doc(user.uid);
-    dr.snapshots().listen((snapshot) {
+    streamSub = dr.snapshots().listen((snapshot) {
       setState(() {
         categoryItems = List<String>.from(snapshot['category']);
         subCategoryItems = List<String>.from(snapshot['subCategory']);
@@ -54,28 +56,31 @@ class _AddProductPageState extends State<AddProductPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          backgroundColor: Colors.blue,
-          elevation: 10,
-          content: new Row(
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-              Container(
-                margin: EdgeInsets.only(left: 15),
-                child: Text(
-                  text,
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500),
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            backgroundColor: Colors.blue,
+            elevation: 10,
+            content: new Row(
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-              ),
-            ],
+                Container(
+                  margin: EdgeInsets.only(left: 15),
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -883,23 +888,6 @@ class _AddProductPageState extends State<AddProductPage> {
             onTap: () => FocusScope.of(context).unfocus(),
             child: Stack(
               children: <Widget>[
-                // Container(
-                //   height: double.infinity,
-                //   width: double.infinity,
-                //   decoration: BoxDecoration(
-                //     gradient: LinearGradient(
-                //       begin: Alignment.topCenter,
-                //       end: Alignment.bottomCenter,
-                //       colors: [
-                //         Color(0xFF80aeff),
-                //         Color(0xFF669eff),
-                //         Color(0xFF4d8eff),
-                //         Color(0xFF448aff),
-                //       ],
-                //       stops: [0.1, 0.4, 0.7, 0.9],
-                //     ),
-                //   ),
-                // ),
                 Container(
                   color: Colors.blue,
                   height: double.infinity,
@@ -972,9 +960,15 @@ class _AddProductPageState extends State<AddProductPage> {
 
   @override
   void dispose() {
-    // _categoryTextController.dispose();
-    // _subCategoryTextControllerispose();
-    // _itemTextControllerspose();
+    _categoryTextController.dispose();
+    _subCategoryTextController.dispose();
+    _itemTextController.dispose();
+    _boxesTextController.dispose();
+    _quantityTextController.dispose();
+    _purchaseTextController.dispose();
+    _expenseTextController.dispose();
+    _sellingTextController.dispose();
+    streamSub.cancel();
     super.dispose();
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../Constant/constants.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -20,6 +21,7 @@ class _HistoryPageState extends State<HistoryPage> {
   List<Map<String, dynamic>> productList = [];
   bool isDialogBoxOpen = false;
   String textMsg = 'No Product Data!';
+  StreamSubscription<QuerySnapshot> streamSub;
 
   @override
   initState() {
@@ -30,30 +32,24 @@ class _HistoryPageState extends State<HistoryPage> {
     var user = firebaseAuthInstance.currentUser;
     dr = firestoreInstance.collection("Users").doc(user.uid);
     cr = dr.collection('products');
-    cr.snapshots().listen((snapshot) {
+    streamSub = cr.snapshots().listen((snapshot) {
       productList = [];
-      // var date = DateTime.fromMillisecondsSinceEpoch(
-      //     int.parse(productList.['timestamp'].toString()) * 1000);
-      // print(date);
-      // product = jsonDecode(result.data());
-      // result.data().forEach((key, value) {
-      //   print('key :' + key + '    value: ' + value.toString());
       cr
           .where('isQRCodeGenerated', isEqualTo: true)
           .orderBy('timestamp', descending: true)
           .get()
-          .then((qerySnapshot) => {
-                qerySnapshot.docs.forEach((result) {
-                  productList.add(result.data());
-                }),
-                setState(() {
-                  productList = productList;
-                  if (isDialogBoxOpen) {
-                    Navigator.of(context).pop();
-                    isDialogBoxOpen = false;
-                  }
-                }),
-              });
+          .then((qerySnapshot) {
+        qerySnapshot.docs.forEach((result) {
+          productList.add(result.data());
+        });
+        setState(() {
+          productList = productList;
+          if (isDialogBoxOpen) {
+            Navigator.of(context).pop();
+            isDialogBoxOpen = false;
+          }
+        });
+      });
     });
   }
 
@@ -65,28 +61,31 @@ class _HistoryPageState extends State<HistoryPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          backgroundColor: Colors.blue,
-          elevation: 10,
-          content: new Row(
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-              Container(
-                margin: EdgeInsets.only(left: 15),
-                child: Text(
-                  text,
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500),
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            backgroundColor: Colors.blue,
+            elevation: 10,
+            content: new Row(
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-              ),
-            ],
+                Container(
+                  margin: EdgeInsets.only(left: 15),
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -268,33 +267,15 @@ class _HistoryPageState extends State<HistoryPage> {
                           fontWeight: FontWeight.bold),
                     ),
                   ),
-          ),
+          )
         ],
       ),
     );
-    // Container(
-    //   padding: EdgeInsets.fromLTRB(0, 0, 0, 64),
-    //   child: productList.length > 0
-    //       ? ListView.builder(
-    //           itemBuilder: (BuildContext context, int index) {
-    //             return ExpandableListView(
-    //                 products: productList,
-    //                 index: index,
-    //                 context: context,
-    //                 onTap: () => null);
-    //           },
-    //           itemCount: productList.length,
-    //         )
-    //       : Center(
-    //           child: Text(
-    //             textMsg,
-    //             textAlign: TextAlign.center,
-    //             style: TextStyle(
-    //                 color: Colors.white,
-    //                 fontSize: 20,
-    //                 fontWeight: FontWeight.bold),
-    //           ),
-    //         ),
-    // ),
+  }
+
+  @override
+  void dispose() {
+    streamSub.cancel();
+    super.dispose();
   }
 }

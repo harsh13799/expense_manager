@@ -1,13 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
-
 import 'package:line_awesome_flutter/line_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
-import 'package:edge_alert/edge_alert.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/expandable_list_view.dart';
@@ -26,6 +25,8 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
   List<Map<String, dynamic>> productList = [];
   bool isDialogBoxOpen = false;
   String textMsg = 'No Product Data!';
+  String belowTextMsg = 'Please Add Products!';
+  StreamSubscription<QuerySnapshot> streamSub;
 
   @override
   initState() {
@@ -44,7 +45,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
         qrFontSize = double.parse(snapshot['qrFontSize'].toString());
       });
     });
-    cr.snapshots().listen((snapshot) {
+    streamSub = cr.snapshots().listen((snapshot) {
       productList = [];
       cr
           .where('isQRCodeGenerated', isEqualTo: false)
@@ -65,6 +66,12 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
     });
   }
 
+  @override
+  void dispose() {
+    streamSub.cancel();
+    super.dispose();
+  }
+
   showLoaderDialog(BuildContext context, String text) {
     setState(() {
       isDialogBoxOpen = true;
@@ -73,7 +80,9 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
+        return WillPopScope(
+          onWillPop: () async => false,
+          child:AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -95,6 +104,7 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                 ),
               ),
             ],
+          ),
           ),
         );
       },
@@ -222,7 +232,8 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
     await file.writeAsBytes(pdf.save());
     writeBatch.commit().then((_) {
       setState(() {
-        textMsg = 'PDF is created.\n${path.path}/${DateTime.now()}.pdf';
+        textMsg = 'PDF is created.';
+        belowTextMsg = '${path.path}/${DateTime.now()}.pdf';
       });
     });
   }
@@ -473,41 +484,30 @@ class _GenerateQRPageState extends State<GenerateQRPage> {
                   itemCount: productList.length,
                 )
               : Center(
-                  child: Text(
-                    textMsg,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        textMsg,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        belowTextMsg,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300),
+                      )
+                    ],
                   ),
                 ),
         ),
       ),
     );
-    // return Container(
-    //   color: Colors.blue,
-    //   height: double.infinity,
-    //   child: Column(
-    //     crossAxisAlignment: CrossAxisAlignment.start,
-    //     children: [
-    //       ListView.builder(
-    //         itemBuilder: (BuildContext context, int index) =>
-    //             EntryItem(data[index]),
-    //         itemCount: data.length,
-    //       ),
-    //       // Center(
-    //       //   child: FlatButton(
-    //       //     color: Colors.teal,
-    //       //     onPressed: () => generateQRCode(context),
-    //       //     child: Text(
-    //       //       'Generate QR code',
-    //       //       style: TextStyle(color: Colors.white),
-    //       //     ),
-    //       //   ),
-    //       // ),
-    //     ],
-    //   ),
-    // );
   }
 }

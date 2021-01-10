@@ -1,4 +1,4 @@
-package com.example.bottomnavigatorbar
+package com.example.expense_manager
 
 import io.flutter.embedding.android.FlutterActivity
 

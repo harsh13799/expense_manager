@@ -137,23 +137,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           onTap: () => FocusScope.of(context).unfocus(),
           child: Stack(
             children: <Widget>[
-              // Container(
-              //   height: double.infinity,
-              //   width: double.infinity,
-              //   decoration: BoxDecoration(
-              //     gradient: LinearGradient(
-              //       begin: Alignment.topCenter,
-              //       end: Alignment.bottomCenter,
-              //       colors: [
-              //         Color(0xFF80aeff),
-              //         Color(0xFF669eff),
-              //         Color(0xFF4d8eff),
-              //         Color(0xFF448aff),
-              //       ],
-              //       stops: [0.1, 0.4, 0.7, 0.9],
-              //     ),
-              //   ),
-              // ),
               Container(
                 color: Colors.blue,
                 height: double.infinity,
@@ -190,5 +173,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
   }
 }

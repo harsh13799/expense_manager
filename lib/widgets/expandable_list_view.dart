@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:line_awesome_flutter/line_awesome_flutter.dart';
 
 class ExpandableListView extends StatefulWidget {
@@ -146,7 +145,6 @@ class _ExpandableListViewState extends State<ExpandableListView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Row(
-                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         '₹' +
@@ -180,7 +178,6 @@ class _ExpandableListViewState extends State<ExpandableListView> {
                   ),
                   widget.isHistoryPage
                       ? Row(
-                          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               totalScanned.toString() + ' Scanned',

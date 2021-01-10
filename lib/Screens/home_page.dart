@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:line_awesome_flutter/line_awesome_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:edge_alert/edge_alert.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,6 +20,7 @@ class _MyCardsPageState extends State<MyCardsPage> {
   CollectionReference cr;
   double totalReturn = 0, totalInvest = 0, totalExpenses = 0, totalProfit = 0;
   List<Map<String, dynamic>> productList = [];
+  List<Map<String, dynamic>> mainData = [];
   List<Map<String, dynamic>> qrCodeScannedList = [];
   Map<String, dynamic> data;
   bool isDialogBoxOpen = false;
@@ -35,20 +35,16 @@ class _MyCardsPageState extends State<MyCardsPage> {
   DateTime pickedFromDate;
   DateTime pickedToDate;
   var formatter = new DateFormat('dd-MM-yyyy');
-  Future _data;
 
   @override
   initState() {
     super.initState();
-    new Future.delayed(Duration.zero, () {
-      showLoaderDialog(context, 'Please wait...');
-    });
     user = firebaseAuthInstance.currentUser;
-    pickedFromDate = user.metadata.creationTime;
+    pickedFromDate = DateTime.now().subtract(new Duration(days: 6));
     pickedToDate = DateTime.now();
     dr = firestoreInstance.collection("Users").doc(user.uid);
     cr = dr.collection('products');
-    _data = _getData(true, context);
+    _getData(context);
   }
 
   Future<void> _setTopBar(List pl) async {
@@ -84,28 +80,31 @@ class _MyCardsPageState extends State<MyCardsPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          backgroundColor: Colors.blue,
-          elevation: 10,
-          content: new Row(
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-              Container(
-                margin: EdgeInsets.only(left: 15),
-                child: Text(
-                  text,
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500),
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            backgroundColor: Colors.blue,
+            elevation: 10,
+            content: new Row(
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-              ),
-            ],
+                Container(
+                  margin: EdgeInsets.only(left: 15),
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -114,11 +113,11 @@ class _MyCardsPageState extends State<MyCardsPage> {
 
   _pickFromDate() async {
     DateTime date = await showDatePicker(
-      context: context,
-      firstDate: user.metadata.creationTime,
-      lastDate: DateTime.now(),
-      initialDate: pickedFromDate,
-    );
+        context: context,
+        firstDate: user.metadata.creationTime,
+        lastDate: DateTime.now(),
+        initialDate: pickedFromDate,
+        helpText: 'Select from date');
     if (date != null)
       setState(() {
         pickedFromDate = date;
@@ -127,11 +126,11 @@ class _MyCardsPageState extends State<MyCardsPage> {
 
   _pickToDate() async {
     DateTime date = await showDatePicker(
-      context: context,
-      firstDate: user.metadata.creationTime,
-      lastDate: DateTime.now(),
-      initialDate: pickedToDate,
-    );
+        context: context,
+        firstDate: user.metadata.creationTime,
+        lastDate: DateTime.now(),
+        initialDate: pickedToDate,
+        helpText: 'Select to date');
     if (date != null)
       setState(() {
         pickedToDate =
@@ -139,141 +138,72 @@ class _MyCardsPageState extends State<MyCardsPage> {
       });
   }
 
-  Future<void> _getData(bool isFirstTime, BuildContext context) async {
+  Future<void> _getData(BuildContext context) async {
     productList = [];
-    if (isFirstTime) {
+    mainData = [];
+    if (pickedToDate.difference(pickedFromDate).inDays < 0) {
+      EdgeAlert.show(context,
+          title: 'Please select valid dates',
+          gravity: EdgeAlert.TOP,
+          backgroundColor: Colors.blue,
+          icon: Icons.error);
+    } else {
+      new Future.delayed(Duration.zero, () {
+        showLoaderDialog(context, 'Please wait...');
+      });
       await cr
           .where('isQRCodeGenerated', isEqualTo: true)
           .orderBy('scannedTime', descending: true)
-          .limit(10)
           .get()
-          .then(
-            (querySnapshot) => {
-              for (int i = 0; i < querySnapshot.docs.length; i++)
-                {
-                  cr
-                      .doc(querySnapshot.docs[i].id)
-                      .collection('QRData')
-                      .where('isScanned', isEqualTo: true)
-                      .orderBy('scannedTime', descending: true)
-                      .get()
-                      .then(
-                        (qr) => {
-                          for (int j = 0; j < qr.docs.length; j++)
-                            {
-                              qrCodeScannedList.add(qr.docs[j].data()),
-                              if (qr.docs.length - 1 == j)
-                                {
-                                  data = {},
-                                  data = querySnapshot.docs[i].data(),
-                                  data['QRData'] = qrCodeScannedList,
-                                  productList.add(data),
-                                  qrCodeScannedList = [],
-                                }
-                            },
-                          setState(() {
-                            if (i == querySnapshot.docs.length - 1) {
-                              productList = productList;
-                              qrCodeScannedList = qrCodeScannedList;
-
-                              _setTopBar(productList).then((_) => {
-                                    dataMap = {
-                                      "Return : " + totalReturn.toString():
-                                          totalReturn.toDouble(),
-                                      "Invest : " + totalInvest.toString():
-                                          totalInvest.toDouble(),
-                                      "Expenses : " + totalExpenses.toString():
-                                          totalExpenses.toDouble(),
-                                      "Profit : " + totalProfit.toString():
-                                          totalProfit.toDouble()
-                                    },
-                                  });
-                              if (isDialogBoxOpen) {
-                                Navigator.of(context).pop();
-                                isDialogBoxOpen = false;
-                              }
-                            }
-                          }),
-                        },
-                      ),
-                },
-            },
-          );
-    } else {
-      if (pickedToDate.difference(pickedFromDate).inDays < 0) {
-        EdgeAlert.show(context,
-            title: 'Please select valid dates',
-            gravity: EdgeAlert.TOP,
-            backgroundColor: Colors.blue,
-            icon: Icons.error);
-      } else {
-        showLoaderDialog(context, 'Please wait...');
+          .then((qerySnapshot) {
+        qerySnapshot.docs.forEach((result) {
+          productList.add(result.data());
+        });
+      });
+      for (int i = 0; i < productList.length; i++) {
         await cr
-            .where('isQRCodeGenerated', isEqualTo: true)
+            .doc(productList[i]['id'])
+            .collection('QRData')
+            .where('isScanned', isEqualTo: true)
+            .where('scannedTime',
+                isGreaterThanOrEqualTo:
+                    Timestamp.fromDate(pickedFromDate).seconds)
+            .where('scannedTime',
+                isLessThanOrEqualTo: Timestamp.fromDate(pickedToDate).seconds)
             .orderBy('scannedTime', descending: true)
-            .limit(10)
             .get()
-            .then(
-              (qerySnapshot) => {
-                for (int i = 0; i < qerySnapshot.docs.length; i++)
-                  {
-                    cr
-                        .doc(qerySnapshot.docs[i].id)
-                        .collection('QRData')
-                        .where('isScanned', isEqualTo: true)
-                        .where('scannedTime',
-                            isGreaterThanOrEqualTo:
-                                Timestamp.fromDate(pickedFromDate).seconds)
-                        .where('scannedTime',
-                            isLessThanOrEqualTo:
-                                Timestamp.fromDate(pickedToDate).seconds)
-                        .orderBy('scannedTime', descending: true)
-                        .get()
-                        .then(
-                          (qr) => {
-                            for (int j = 0; j < qr.docs.length; j++)
-                              {
-                                qrCodeScannedList.add(qr.docs[j].data()),
-                                if (qr.docs.length - 1 == j)
-                                  {
-                                    data = {},
-                                    data = qerySnapshot.docs[i].data(),
-                                    data['QRData'] = qrCodeScannedList,
-                                    productList.add(data),
-                                    qrCodeScannedList = [],
-                                  }
-                              },
-                            setState(() {
-                              if (i == qerySnapshot.docs.length - 1) {
-                                productList = productList;
-                                qrCodeScannedList = qrCodeScannedList;
-                                _setTopBar(productList).then((_) => {
-                                      dataMap = {
-                                        "Return : " + totalReturn.toString():
-                                            totalReturn.toDouble(),
-                                        "Invest : " + totalInvest.toString():
-                                            totalInvest.toDouble(),
-                                        "Expenses : " +
-                                                totalExpenses.toString():
-                                            totalExpenses.toDouble(),
-                                        "Profit : " + totalProfit.toString():
-                                            totalProfit.toDouble()
-                                      },
-                                    });
-                                if (isDialogBoxOpen) {
-                                  Navigator.of(context).pop();
-                                  isDialogBoxOpen = false;
-                                }
-                              }
-                            }),
-                          },
-                        ),
-                  },
-              },
-            );
+            .then((qr) {
+          for (int j = 0; j < qr.docs.length; j++) {
+            qrCodeScannedList.add(qr.docs[j].data());
+            if (j == qr.docs.length - 1) {
+              data = {};
+              data = productList[i];
+              data['QRData'] = qrCodeScannedList;
+              mainData.add(data);
+              qrCodeScannedList = [];
+            }
+          }
+        });
+      }
+      setState(() {
+        mainData = mainData;
+      });
+      _setTopBar(mainData).then((_) {
+        dataMap = {
+          "Return : " + totalReturn.toString(): totalReturn.toDouble(),
+          "Invest : " + totalInvest.toString(): totalInvest.toDouble(),
+          "Expenses : " + totalExpenses.toString(): totalExpenses.toDouble(),
+          "Profit : " + totalProfit.toString(): totalProfit.toDouble()
+        };
+      });
+      if (isDialogBoxOpen) {
+        Navigator.of(context).pop();
+        setState(() {
+          isDialogBoxOpen = false;
+        });
       }
     }
-    return productList;
+    return mainData;
   }
 
   @override
@@ -321,21 +251,34 @@ class _MyCardsPageState extends State<MyCardsPage> {
 
     return Scaffold(
       backgroundColor: Colors.blue,
-      body: SafeArea(
-        child: Container(
+      body: NestedScrollView(
+        physics: ScrollPhysics(parent: PageScrollPhysics()),
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return <Widget>[
+            SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  SizedBox(height: 7),
+                  Container(
+                    height: 120,
+                    padding: EdgeInsets.symmetric(horizontal: 15.0),
+                    child: chart,
+                  ),
+                  SizedBox(height: 7),
+                  Divider(
+                    height: 2,
+                    indent: 30,
+                    endIndent: 30,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ];
+        },
+        body: Container(
           child: Column(
             children: <Widget>[
-              SizedBox(height: 7),
-              Expanded(
-                flex: 3,
-                child: chart,
-              ),
-              Divider(
-                height: 2,
-                indent: 30,
-                endIndent: 30,
-                color: Colors.white,
-              ),
               Expanded(
                 flex: 1,
                 child: Container(
@@ -393,7 +336,7 @@ class _MyCardsPageState extends State<MyCardsPage> {
                       Spacer(),
                       RaisedButton(
                         elevation: 5.0,
-                        onPressed: () => _getData(false, context),
+                        onPressed: () => _getData(context),
                         padding: EdgeInsets.all(5.0),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30.0),
@@ -415,12 +358,12 @@ class _MyCardsPageState extends State<MyCardsPage> {
                 color: Colors.white,
               ),
               Expanded(
-                flex: 7,
-                child: productList.length > 2
+                flex: 8,
+                child: mainData.length > 0
                     ? ListView.builder(
                         itemBuilder: (BuildContext context, int index) {
-                          ReportExapandablePage(
-                              products: productList,
+                          return ReportExapandablePage(
+                              products: mainData,
                               index: index,
                               context: context,
                               tailIcon: Icons.delete,
@@ -428,7 +371,7 @@ class _MyCardsPageState extends State<MyCardsPage> {
                               isHistoryPage: false,
                               onTap: () => null);
                         },
-                        itemCount: productList.length,
+                        itemCount: mainData.length,
                       )
                     : Center(
                         child: Text(

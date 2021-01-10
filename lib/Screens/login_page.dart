@@ -1,5 +1,3 @@
-import 'package:bottomnavigatorbar/HomePage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,7 +22,6 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
     FirebaseAuth.instance.authStateChanges().listen((User user) {
       if (user != null) {
-        // if (user.emailVerified) { TODO change thsi
         Navigator.pushReplacement(
           context,
           PageTransition(
@@ -34,13 +31,7 @@ class _LoginPageState extends State<LoginPage> {
             child: HomePage(),
           ),
         );
-      } else {
-        final snackBar = SnackBar(content: Text('Please verify email'));
-        _scaffoldKey.currentState.showSnackBar(snackBar);
-        // FirebaseAuth.instance.signOut();
-        // Navigator.pop(context);
       }
-      // }
     });
   }
 
@@ -49,28 +40,31 @@ class _LoginPageState extends State<LoginPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          backgroundColor: Colors.blue,
-          elevation: 10,
-          content: new Row(
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-              Container(
-                margin: EdgeInsets.only(left: 15),
-                child: Text(
-                  text,
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500),
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            backgroundColor: Colors.blue,
+            elevation: 10,
+            content: new Row(
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-              ),
-            ],
+                Container(
+                  margin: EdgeInsets.only(left: 15),
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -297,23 +291,6 @@ class _LoginPageState extends State<LoginPage> {
           onTap: () => FocusScope.of(context).unfocus(),
           child: Stack(
             children: <Widget>[
-              // Container(
-              //   height: double.infinity,
-              //   width: double.infinity,
-              //   decoration: BoxDecoration(
-              //     gradient: LinearGradient(
-              //       begin: Alignment.topCenter,
-              //       end: Alignment.bottomCenter,
-              //       colors: [
-              //         Color(0xFF80aeff),
-              //         Color(0xFF669eff),
-              //         Color(0xFF4d8eff),
-              //         Color(0xFF448aff),
-              //       ],
-              //       stops: [0.1, 0.4, 0.7, 0.9],
-              //     ),
-              //   ),
-              // ),
               Container(
                 color: Colors.blue,
                 height: double.infinity,
@@ -357,8 +334,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _emailController.text = '';
-    _passwordController.text = '';
+    _emailController.clear();
+    _passwordController.clear();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();

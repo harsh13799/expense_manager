@@ -10,16 +10,7 @@ class HelpAndSupportPage extends StatefulWidget {
 }
 
 class _HelpAndSupportPageState extends State<HelpAndSupportPage> {
-  final _emailController = new TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
-
-  String validateField() {
-    String error;
-    if (_emailController.text.isEmpty) {
-      error = 'Please enter the Email';
-    }
-    return error;
-  }
 
   Widget header(context) {
     return GestureDetector(
@@ -51,23 +42,6 @@ class _HelpAndSupportPageState extends State<HelpAndSupportPage> {
           onTap: () => FocusScope.of(context).unfocus(),
           child: Stack(
             children: <Widget>[
-              // Container(
-              //   height: double.infinity,
-              //   width: double.infinity,
-              //   decoration: BoxDecoration(
-              //     gradient: LinearGradient(
-              //       begin: Alignment.topCenter,
-              //       end: Alignment.bottomCenter,
-              //       colors: [
-              //         Color(0xFF80aeff),
-              //         Color(0xFF669eff),
-              //         Color(0xFF4d8eff),
-              //         Color(0xFF448aff),
-              //       ],
-              //       stops: [0.1, 0.4, 0.7, 0.9],
-              //     ),
-              //   ),
-              // ),
               Container(
                 color: Colors.blue,
                 height: double.infinity,

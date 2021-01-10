@@ -1,4 +1,3 @@
-import 'package:bottomnavigatorbar/HomePage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,11 +8,10 @@ import 'HomePage.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
-  // final Future<FirebaseApp> _initialization = Firebase.initializeApp();
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Colors.blue, //or set color with: Color(0xFF0000FF)
+      statusBarColor: Colors.blue,
     ));
     return MaterialApp(
       title: 'Expanse Manager',
@@ -45,7 +43,6 @@ class AuthenticationWrapper extends StatelessWidget {
           );
         }
 
-        // Once complete, show your application
         if (snapshot.connectionState == ConnectionState.done) {
           User user = FirebaseAuth.instance.currentUser;
           if (user == null) {

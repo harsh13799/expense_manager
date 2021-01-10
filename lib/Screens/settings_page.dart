@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -26,13 +27,14 @@ class _SettingsPageState extends State<SettingsPage> {
   FirebaseFirestore firestoreInstance = FirebaseFirestore.instance;
   FirebaseAuth firebaseAuthInstance = FirebaseAuth.instance;
   DocumentReference dr;
+  StreamSubscription<DocumentSnapshot> streamSub;
 
   @override
   initState() {
     super.initState();
     var user = firebaseAuthInstance.currentUser;
     dr = firestoreInstance.collection("Users").doc(user.uid);
-    dr.snapshots().listen((snapshot) {
+    streamSub = dr.snapshots().listen((snapshot) {
       setState(() {
         _qrSizeController.text = snapshot['qrCodeSize'].toString();
         _pdfRowController.text = snapshot['tableRows'].toString();
@@ -450,23 +452,6 @@ class _SettingsPageState extends State<SettingsPage> {
               onTap: () => FocusScope.of(context).unfocus(),
               child: Stack(
                 children: <Widget>[
-                  // Container(
-                  //   height: double.infinity,
-                  //   width: double.infinity,
-                  //   decoration: BoxDecoration(
-                  //     gradient: LinearGradient(
-                  //       begin: Alignment.topCenter,
-                  //       end: Alignment.bottomCenter,
-                  //       colors: [
-                  //         Color(0xFF80aeff),
-                  //         Color(0xFF669eff),
-                  //         Color(0xFF4d8eff),
-                  //         Color(0xFF448aff),
-                  //       ],
-                  //       stops: [0.1, 0.4, 0.7, 0.9],
-                  //     ),
-                  //   ),
-                  // ),
                   Container(
                     color: Colors.blue,
                     height: double.infinity,
@@ -563,6 +548,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _pdfRowController.dispose();
     _pdfPaddingController.dispose();
     _qrFontSizeController.dispose();
+    streamSub.cancel();
     super.dispose();
   }
 }

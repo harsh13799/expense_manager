@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-Color darkBlue = Color(0xff2446a6);
-
 class MyBottomNavBarItem extends StatelessWidget {
   final int id;
   final int active;

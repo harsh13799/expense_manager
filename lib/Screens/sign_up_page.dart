@@ -1,11 +1,10 @@
-import 'package:bottomnavigatorbar/Screens/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:page_transition/page_transition.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../Constant/constants.dart';
+import 'login_page.dart';
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -20,38 +19,36 @@ class _SignUpPageState extends State<SignUpPage> {
   final _phoneNoController = new TextEditingController();
   final _confirmPasswordController = new TextEditingController();
 
-  @override
-  initState() {
-    super.initState();
-  }
-
   showLoaderDialog(BuildContext context, String text) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          backgroundColor: Colors.blue,
-          elevation: 10,
-          content: new Row(
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-              Container(
-                margin: EdgeInsets.only(left: 15),
-                child: Text(
-                  text,
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500),
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            backgroundColor: Colors.blue,
+            elevation: 10,
+            content: new Row(
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-              ),
-            ],
+                Container(
+                  margin: EdgeInsets.only(left: 15),
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -387,23 +384,6 @@ class _SignUpPageState extends State<SignUpPage> {
             onTap: () => FocusScope.of(context).unfocus(),
             child: Stack(
               children: <Widget>[
-                // Container(
-                //   height: double.infinity,
-                //   width: double.infinity,
-                //   decoration: BoxDecoration(
-                //     gradient: LinearGradient(
-                //       begin: Alignment.topCenter,
-                //       end: Alignment.bottomCenter,
-                //       colors: [
-                //         Color(0xFF80aeff),
-                //         Color(0xFF669eff),
-                //         Color(0xFF4d8eff),
-                //         Color(0xFF448aff),
-                //       ],
-                //       stops: [0.1, 0.4, 0.7, 0.9],
-                //     ),
-                //   ),
-                // ),
                 Container(
                   color: Colors.blue,
                   height: double.infinity,

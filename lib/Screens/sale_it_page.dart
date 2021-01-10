@@ -20,6 +20,8 @@ class _SaleItPageState extends State<SaleItPage> {
   CollectionReference cr;
   List<Map<String, dynamic>> productList = [];
   bool isDialogBoxOpen = false;
+  bool isDisable = false;
+  StreamSubscription<QuerySnapshot> streamSub;
 
   @override
   initState() {
@@ -27,7 +29,7 @@ class _SaleItPageState extends State<SaleItPage> {
     var user = firebaseAuthInstance.currentUser;
     dr = firestoreInstance.collection("Users").doc(user.uid);
     cr = dr.collection('products');
-    cr.snapshots().listen(
+    streamSub = cr.snapshots().listen(
       (snapshot) {
         productList = [];
         cr
@@ -35,29 +37,28 @@ class _SaleItPageState extends State<SaleItPage> {
             .orderBy('timestamp', descending: true)
             .get()
             .then(
-              (qerySnapshot) => {
-                qerySnapshot.docs.forEach(
-                  (result) {
-                    productList.add(result.data());
-                  },
-                ),
-                setState(
-                  () {
-                    productList = productList;
-                    if (isDialogBoxOpen) {
-                      Navigator.of(context).pop();
-                      isDialogBoxOpen = false;
-                    }
-                  },
-                ),
-              },
-            );
+          (qerySnapshot) {
+            qerySnapshot.docs.forEach((result) {
+              productList.add(result.data());
+            });
+            setState(() {
+              productList = productList;
+              if (isDialogBoxOpen) {
+                Navigator.of(context).pop();
+                isDialogBoxOpen = false;
+              }
+            });
+          },
+        );
       },
     );
   }
 
   Future<void> _sellProduct(
       String id, String qrData, BuildContext context) async {
+    setState(() {
+      isDisable = true;
+    });
     CollectionReference c = cr.doc(id).collection('QRData');
     return await c.where('data', isEqualTo: qrData).get().then((querySnapshot) {
       querySnapshot.docs.forEach((result) {
@@ -66,6 +67,7 @@ class _SaleItPageState extends State<SaleItPage> {
           controller.resumeCamera();
           setState(() {
             isDialogBoxOpen = false;
+            isDisable = false;
           });
           EdgeAlert.show(context,
               title: 'Product already sold out!',
@@ -86,6 +88,7 @@ class _SaleItPageState extends State<SaleItPage> {
                     controller.resumeCamera(),
                     setState(() {
                       isDialogBoxOpen = false;
+                      isDisable = false;
                     }),
                     EdgeAlert.show(context,
                         title: 'Product sold!',
@@ -139,98 +142,103 @@ class _SaleItPageState extends State<SaleItPage> {
         context: context,
         barrierDismissible: false,
         builder: (context) {
-          return AlertDialog(
-            title: Text(
-              itemName,
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18),
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            backgroundColor: Colors.blue,
-            elevation: 10,
-            content: Container(
-              height: 100,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Text(
-                    'MRP : ' + sellingPrice,
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                  isBoxes
-                      ? Text(
-                          'Remaining boxes : ' + boxes,
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        )
-                      : Text(
-                          'Remaing quantity : ' + quantity,
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        )
-                ],
+          return WillPopScope(
+            onWillPop: () async => false,
+            child: AlertDialog(
+              title: Text(
+                itemName,
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18),
               ),
-            ),
-            actions: <Widget>[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 0, 15, 0),
-                child: Row(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              backgroundColor: Colors.blue,
+              elevation: 10,
+              content: Container(
+                height: 100,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    isValid
-                        ? RaisedButton(
-                            elevation: 5.0,
-                            onPressed: () => _sellProduct(itemid, id, context),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30.0),
-                            ),
-                            color: Colors.white,
-                            child: Text(
-                              'SALE IT',
-                              style: TextStyle(
-                                color: Colors.blue,
-                                letterSpacing: 1.5,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          )
-                        : SizedBox(
-                            width: 0,
-                          ),
                     SizedBox(
-                      width: 10,
+                      height: 10,
                     ),
-                    RaisedButton(
-                      elevation: 5.0,
-                      onPressed: () => {
-                        controller.resumeCamera(),
-                        Navigator.pop(context),
-                        setState(() {
-                          isDialogBoxOpen = false;
-                        })
-                      },
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0),
-                      ),
-                      color: Colors.white,
-                      child: Text(
-                        "CANCEL",
-                        style: TextStyle(
-                          color: Colors.blue,
-                          letterSpacing: 1.5,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    Text(
+                      'MRP : ' + sellingPrice,
+                      style: TextStyle(color: Colors.white, fontSize: 18),
                     ),
+                    isBoxes
+                        ? Text(
+                            'Remaining boxes : ' + boxes,
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                          )
+                        : Text(
+                            'Remaing quantity : ' + quantity,
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                          )
                   ],
                 ),
               ),
-            ],
+              actions: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 15, 0),
+                  child: Row(
+                    children: [
+                      isValid
+                          ? RaisedButton(
+                              elevation: 5.0,
+                              onPressed: () => isDisable
+                                  ? ''
+                                  : _sellProduct(itemid, id, context),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                              color: Colors.white,
+                              child: Text(
+                                'SALE IT',
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  letterSpacing: 1.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
+                          : SizedBox(
+                              width: 0,
+                            ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      RaisedButton(
+                        elevation: 5.0,
+                        onPressed: () => {
+                          controller.resumeCamera(),
+                          Navigator.pop(context),
+                          setState(() {
+                            isDialogBoxOpen = false;
+                          })
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                        ),
+                        color: Colors.white,
+                        child: Text(
+                          "CANCEL",
+                          style: TextStyle(
+                            color: Colors.blue,
+                            letterSpacing: 1.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           );
         });
   }
@@ -267,7 +275,7 @@ class _SaleItPageState extends State<SaleItPage> {
     controller.scannedDataStream.listen((scanData) {
       setState(() {
         result = scanData;
-        isDialogBoxOpen ? '' : _saleItPopup(context, result.code);
+        if (!isDialogBoxOpen) _saleItPopup(context, result.code);
         controller.pauseCamera();
       });
     });
@@ -291,6 +299,7 @@ class _SaleItPageState extends State<SaleItPage> {
   @override
   void dispose() {
     controller.dispose();
+    streamSub.cancel();
     super.dispose();
   }
 }

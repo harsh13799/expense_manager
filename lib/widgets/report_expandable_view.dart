@@ -1,6 +1,5 @@
 import 'package:date_time_picker/date_time_picker.dart';
 import 'package:flutter/material.dart';
-
 import 'package:line_awesome_flutter/line_awesome_flutter.dart';
 
 class ReportExapandablePage extends StatefulWidget {
@@ -56,7 +55,6 @@ class _ReportExapandablePageState extends State<ReportExapandablePage> {
   Widget _buildTiles() {
     bool isBoxes = widget.products[widget.index]['isBoxes'];
     return Container(
-      // padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 9.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(25.0),
