@@ -4,6 +4,8 @@ import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:edge_alert/edge_alert.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:line_awesome_flutter/line_awesome_flutter.dart';
+import '../Constant/constants.dart';
 
 class SaleItPage extends StatefulWidget {
   @override
@@ -16,6 +18,7 @@ class _SaleItPageState extends State<SaleItPage> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   FirebaseFirestore firestoreInstance = FirebaseFirestore.instance;
   FirebaseAuth firebaseAuthInstance = FirebaseAuth.instance;
+  final _qrTextController = new TextEditingController();
   DocumentReference dr;
   CollectionReference cr;
   List<Map<String, dynamic>> productList = [];
@@ -250,24 +253,26 @@ class _SaleItPageState extends State<SaleItPage> {
         ? 150.0
         : 300.0;
     return NotificationListener<SizeChangedLayoutNotification>(
-        onNotification: (notification) {
-          Future.microtask(
-              () => controller?.updateDimensions(qrKey, scanArea: scanArea));
-          return false;
-        },
-        child: SizeChangedLayoutNotifier(
-            key: const Key('qr-size-notifier'),
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
-              overlay: QrScannerOverlayShape(
-                borderColor: Colors.red,
-                borderRadius: 10,
-                borderLength: 30,
-                borderWidth: 10,
-                cutOutSize: scanArea,
-              ),
-            )));
+      onNotification: (notification) {
+        Future.microtask(
+            () => controller?.updateDimensions(qrKey, scanArea: scanArea));
+        return false;
+      },
+      child: SizeChangedLayoutNotifier(
+        key: const Key('qr-size-notifier'),
+        child: QRView(
+          key: qrKey,
+          onQRViewCreated: _onQRViewCreated,
+          overlay: QrScannerOverlayShape(
+            borderColor: Colors.red,
+            borderRadius: 10,
+            borderLength: 30,
+            borderWidth: 10,
+            cutOutSize: scanArea,
+          ),
+        ),
+      ),
+    );
   }
 
   void _onQRViewCreated(QRViewController controller) {
@@ -283,12 +288,57 @@ class _SaleItPageState extends State<SaleItPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(top: 15.0, left: 10, right: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              alignment: Alignment.centerLeft,
+              decoration: kBoxDecorationStyle,
+              height: 60.0,
+              width: 260,
+              child: TextField(
+                controller: _qrTextController,
+                keyboardType: TextInputType.name,
+                style: TextStyle(
+                  color: Colors.blue,
+                ),
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.only(top: 14.0),
+                  prefixIcon: Icon(
+                    LineAwesomeIcons.qrcode,
+                    color: Colors.blue,
+                  ),
+                  hintText: 'Enter QR Code',
+                  hintStyle: kHintTextStyle,
+                ),
+              ),
+            ),
+            RaisedButton(
+              elevation: 5.0,
+              onPressed: () => _saleItPopup(context, _qrTextController.text),
+              padding: EdgeInsets.all(5.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0),
+              ),
+              color: Colors.white,
+              child: Icon(
+                LineAwesomeIcons.search,
+                color: Colors.blue,
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniCenterTop,
+      body: Column(
         children: <Widget>[
           Expanded(
-            flex: 1,
+            flex: 4,
             child: _buildQrView(context),
           ),
         ],

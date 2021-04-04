@@ -99,6 +99,7 @@ class _SignUpPageState extends State<SignUpPage> {
               "tableRows": 8,
               "tablePadding": 10,
               "qrFontSize": 8,
+              "isPortrait": true,
             }, SetOptions(merge: true)).then((_) {
               final snackBar =
                   SnackBar(content: Text('Registration Successfully Done'));

@@ -28,6 +28,7 @@ class _SettingsPageState extends State<SettingsPage> {
   FirebaseAuth firebaseAuthInstance = FirebaseAuth.instance;
   DocumentReference dr;
   StreamSubscription<DocumentSnapshot> streamSub;
+  bool isSwitched = true;
 
   @override
   initState() {
@@ -40,6 +41,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _pdfRowController.text = snapshot['tableRows'].toString();
         _pdfPaddingController.text = snapshot['tablePadding'].toString();
         _qrFontSizeController.text = snapshot['qrFontSize'].toString();
+        isSwitched = snapshot['isPortrait'];
       });
     });
   }
@@ -86,9 +88,16 @@ class _SettingsPageState extends State<SettingsPage> {
     print(_pdfRowController.text);
     String e = validateField();
     if (e == null) {
-      //TODO change this
       var data = [
-        'It is a long established fact that a',
+        'TEMPORARY',
+        'TEMPORARY',
+        'TEMPORARY',
+        'TEMPORARY',
+        'TEMPORARY',
+        'TEMPORARY',
+        'TEMPORARY',
+        'TEMPORARY',
+        'TEMPORARY',
         'TEMPORARY',
         'TEMPORARY',
         'TEMPORARY',
@@ -102,6 +111,14 @@ class _SettingsPageState extends State<SettingsPage> {
         'TEMPORARY'
       ];
       var data1 = [
+        '1000',
+        '1000',
+        '1000',
+        '1000',
+        '1000',
+        '1000',
+        '1000',
+        '1000',
         '1000',
         '1000',
         '1000',
@@ -152,6 +169,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
       pdf.addPage(pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
+          orientation: isSwitched
+              ? pw.PageOrientation.portrait
+              : pw.PageOrientation.landscape,
           margin: pw.EdgeInsets.all(
               double.parse(_pdfPaddingController.text)), // chaange the margin
           build: (pw.Context context) {
@@ -164,13 +184,16 @@ class _SettingsPageState extends State<SettingsPage> {
             ];
           }));
 
-      Directory path = await getExternalStorageDirectory();
-      final file = File("${path.path}/Preview.pdf");
-      print(path.path);
+      final Directory _appDocDirFolder =
+          Directory('/storage/emulated/0/ExpenseManager');
+      if (!await _appDocDirFolder.exists()) {
+        await _appDocDirFolder.create(recursive: true);
+      }
+      final file = File("${_appDocDirFolder.path}/Preview.pdf");
       await file.writeAsBytes(pdf.save());
       final snackBar = SnackBar(
         content: Text(
-            'Preview.pdf created. Please preview it \/data\/com.example.expese_manager\/files'),
+            'Preview.pdf created. Please preview it \/storage\/emulated\/0\/ExpenseManager\/Preview.pdf'),
         duration: Duration(seconds: 4),
       );
       _scaffoldKey.currentState.showSnackBar(snackBar);
@@ -188,6 +211,7 @@ class _SettingsPageState extends State<SettingsPage> {
         "tableRows": int.parse(_pdfRowController.text),
         "tablePadding": int.parse(_pdfPaddingController.text),
         "qrFontSize": int.parse(_qrFontSizeController.text),
+        "isPortrait": isSwitched,
       }, SetOptions(merge: true)).then((_) {
         final snackBar = SnackBar(content: Text('Settings saved successfully'));
         _scaffoldKey.currentState.showSnackBar(snackBar);
@@ -440,6 +464,20 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  void toggleSwitch(bool value) {
+    if (isSwitched == false) {
+      setState(() {
+        isSwitched = true;
+      });
+      print('Switch Button is ON');
+    } else {
+      setState(() {
+        isSwitched = false;
+      });
+      print('Switch Button is OFF');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -494,7 +532,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           _buildFontSizeTF(),
                           SizedBox(
-                            height: 30.0,
+                            height: 20.0,
                           ),
                           Text(
                             'PDF Settings',
@@ -511,6 +549,36 @@ class _SettingsPageState extends State<SettingsPage> {
                             height: 10.0,
                           ),
                           _buildPaddingTF(),
+                          SizedBox(
+                            height: 10.0,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Landscape Mode',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.0,
+                                ),
+                              ),
+                              Switch(
+                                onChanged: toggleSwitch,
+                                value: isSwitched,
+                                activeColor: Colors.blue[400],
+                                activeTrackColor: Colors.white,
+                                inactiveThumbColor: Colors.blue[400],
+                                inactiveTrackColor: Colors.white,
+                              ),
+                              Text(
+                                'Portrait Mode',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.0,
+                                ),
+                              ),
+                            ],
+                          ),
                           SizedBox(
                             height: 10.0,
                           ),

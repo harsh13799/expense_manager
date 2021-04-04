@@ -173,8 +173,8 @@ class _MyProfilePageState extends State<MyProfilePage> {
             child: ListView(
               children: <Widget>[
                 ProfileListItem(
-                  icon: LineAwesomeIcons.history,
-                  text: 'History',
+                  icon: LineAwesomeIcons.business_time,
+                  text: 'Report',
                   index: 0,
                 ),
                 ProfileListItem(

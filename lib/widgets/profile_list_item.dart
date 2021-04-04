@@ -83,7 +83,6 @@ class ProfileListItem extends StatelessWidget {
           FlutterShareMe().shareToWhatsApp(
               msg:
                   'Hi, I am using *Expense Manager* application for my shop. I can track my all items history with the help of *QR Code*. If you are excited and want to join then download it from below link. https://google.com');
-          print('asdf');
           break;
         }
       case 4:
